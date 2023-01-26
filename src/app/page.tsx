@@ -1,91 +1,70 @@
-import Image from 'next/image'
-import { Inter } from '@next/font/google'
-import styles from './page.module.css'
+"use client";
+import { useState, useMemo } from "react";
+import { PossibleWins } from "@/constants";
+import { matches } from "@/utils";
+import { Player } from "@/types";
 
-const inter = Inter({ subsets: ['latin'] })
+export default function App() {
+  const [turn, setTurn] = useState<Player>("X");
+  const [spaces, setSpaces] = useState<Player[]>(Array(9).fill(null));
+  const updatedSpaces = [...spaces];
+  let message;
 
-export default function Home() {
+  const isWinner = useMemo(() => {
+    for (let i = 0; i < PossibleWins.length; i++) {
+      const [a, b, c] = PossibleWins[i];
+      const thereIsAMatch = matches(spaces[a], spaces[b], spaces[c]);
+      if (thereIsAMatch) {
+        return thereIsAMatch;
+      }
+    }
+  }, [spaces]);
+
+  function handleTurn(index: number) {
+    updatedSpaces[index] = turn;
+    setSpaces(updatedSpaces);
+
+    if (turn === "O") {
+      setTurn("X");
+    } else {
+      setTurn("O");
+    }
+  }
+
+  if (isWinner) {
+    message = `The Champion is ${isWinner}`;
+  } else if (!updatedSpaces.includes(null) && isWinner === undefined) {
+    message = "This game is for the cats";
+  } else {
+    message = `Current Player: ${turn}`;
+  }
+
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>app/page.tsx</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="App">
+      <div className="board">
+        {spaces.map((value, index) => (
+          <button
+            className="square"
+            disabled={!!value || isWinner === "X" || isWinner === "O"}
+            key={index}
+            onClick={() => handleTurn(index)}
           >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
+            {value || null}
+          </button>
+        ))}
       </div>
-
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-        <div className={styles.thirteen}>
-          <Image src="/thirteen.svg" alt="13" width={40} height={31} priority />
-        </div>
+      <div className="gamePlay">
+        <div className="turns">{message}</div>
+        <button
+          className="reset"
+          onClick={() => {
+            setTurn("X");
+            setSpaces(Array(9).fill(null));
+          }}
+        >
+          Play again
+        </button>
       </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://beta.nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={inter.className}>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p className={inter.className}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={inter.className}>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p className={inter.className}>Explore the Next.js 13 playground.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={inter.className}>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p className={inter.className}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  )
+    </div>
+  );
 }
